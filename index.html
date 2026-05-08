@@ -27,8 +27,8 @@
         <div class="card">
           <h2>Choose your username</h2>
           <p>
-            Usernames are <strong>unique</strong> across the whole site. Use 3–18
-            characters: letters, numbers, underscore. Must start with a letter.
+            Usernames are <strong>unique</strong> across the whole site. Use 3–20
+            characters: letters, numbers, underscore.
           </p>
 
           <div style="margin-top: 14px" class="row">
@@ -37,7 +37,7 @@
               class="input"
               placeholder="e.g. edu_learner"
               autocomplete="off"
-              maxlength="18"
+              maxlength="20"
             />
             <button id="registerBtn" class="btn">Continue</button>
           </div>
@@ -86,7 +86,7 @@
           EduCoin.showNotice(noticeEl, {
             type: "bad",
             title: "Invalid username",
-            message: "Use 3–18 chars: letters, numbers, underscore. Start with a letter.",
+            message: "Use 3–20 chars: letters, numbers, underscore.",
           });
           return;
         }

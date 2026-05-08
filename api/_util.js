@@ -24,7 +24,9 @@ function getEnv(name) {
 }
 
 function usernameIsValid(username) {
-  return /^[a-zA-Z][a-zA-Z0-9_]{2,17}$/.test(username);
+  // Keep server rules aligned with frontend:
+  // 3-20 chars, letters/numbers/underscore
+  return /^[a-zA-Z0-9_]{3,20}$/.test(username);
 }
 
 function safeJsonParse(s) {

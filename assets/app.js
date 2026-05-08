@@ -29,8 +29,8 @@ const EduCoin = (() => {
   }
 
   function usernameIsValid(username) {
-    // 3-18 chars, letters/numbers/underscore, must start with letter
-    return /^[a-zA-Z][a-zA-Z0-9_]{2,17}$/.test(username);
+    // Simple: 3-20 chars, letters/numbers/underscore
+    return /^[a-zA-Z0-9_]{3,20}$/.test(username);
   }
 
   async function api(path, { method = "GET", body, headers } = {}) {
