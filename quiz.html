@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EduCoin — Quiz</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>EduCoin</h1>
+            <p id="subtitle">Quiz</p>
+          </div>
+        </div>
+        <div class="nav">
+          <a data-nav href="index.html">Login</a>
+          <a data-nav href="quizzes.html">Quizzes</a>
+          <a data-nav href="wallet.html">Wallet</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="row">
+            <h2 id="title" style="margin: 0">Loading...</h2>
+            <div class="spacer"></div>
+            <span class="pill">User: <code id="topbarUsername">—</code></span>
+            <span class="pill">Balance: <code><span id="topbarBalance">0</span> EDU</code></span>
+          </div>
+
+          <p id="desc" style="margin-top: 10px"></p>
+
+          <div id="notice" class="notice" hidden></div>
+          <div id="questions"></div>
+
+          <div style="margin-top: 14px" class="row">
+            <button id="submitBtn" class="btn">Submit answers</button>
+            <button id="backBtn" class="btn secondary">Back to quizzes</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Reward</h2>
+          <p>
+            You earn coins based on correct answers. You can’t claim the same quiz
+            twice with the same username.
+          </p>
+          <div style="margin-top: 12px" class="notice">
+            <strong>Tip</strong>
+            <div style="margin-top: 6px">
+              If you refresh mid-quiz, your selected options may reset.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+      const username = EduCoin.requireUsernameOrRedirect();
+      const params = new URLSearchParams(location.search);
+      const quizId = params.get("id");
+      const titleEl = EduCoin.$("#title");
+      const subtitleEl = EduCoin.$("#subtitle");
+      const descEl = EduCoin.$("#desc");
+      const noticeEl = EduCoin.$("#notice");
+      const questionsEl = EduCoin.$("#questions");
+      const submitBtn = EduCoin.$("#submitBtn");
+
+      EduCoin.$("#backBtn").addEventListener("click", () => (location.href = "quizzes.html"));
+
+      function renderQuestion(q, idx) {
+        const el = document.createElement("div");
+        el.className = "q";
+        el.innerHTML = `
+          <h3>Q${idx + 1}. ${EduCoin.escapeHtml(q.prompt)}</h3>
+          <div class="choices"></div>
+        `;
+        const choicesEl = el.querySelector(".choices");
+        q.choices.forEach((c, cIdx) => {
+          const row = document.createElement("label");
+          row.className = "choice";
+          row.innerHTML = `
+            <input type="radio" name="q_${idx}" value="${cIdx}" />
+            <div style="min-width:0">${EduCoin.escapeHtml(c)}</div>
+          `;
+          choicesEl.appendChild(row);
+        });
+        return el;
+      }
+
+      function getAnswers(questionCount) {
+        const answers = [];
+        for (let i = 0; i < questionCount; i++) {
+          const checked = document.querySelector(`input[name="q_${i}"]:checked`);
+          answers.push(checked ? Number(checked.value) : null);
+        }
+        return answers;
+      }
+
+      async function load() {
+        if (!quizId) {
+          titleEl.textContent = "Missing quiz id";
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "Invalid link",
+            message: "Go back and select a quiz.",
+          });
+          submitBtn.disabled = true;
+          return;
+        }
+        const res = await EduCoin.api(`/api/quiz?id=${encodeURIComponent(quizId)}`);
+        if (!res?.ok) {
+          titleEl.textContent = "Couldn’t load quiz";
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "Quiz not found",
+            message: "Go back and pick another quiz.",
+          });
+          submitBtn.disabled = true;
+          return;
+        }
+        titleEl.textContent = res.quiz.title;
+        subtitleEl.textContent = res.quiz.title;
+        descEl.textContent = res.quiz.description || "";
+        questionsEl.innerHTML = "";
+        res.quiz.questions.forEach((q, idx) => questionsEl.appendChild(renderQuestion(q, idx)));
+      }
+
+      async function submit() {
+        EduCoin.hideNotice(noticeEl);
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        const questionCount = document.querySelectorAll(".q").length;
+        const answers = getAnswers(questionCount);
+        if (answers.some((a) => a === null)) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit answers";
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "Incomplete",
+            message: "Please answer every question before submitting.",
+          });
+          return;
+        }
+
+        const res = await EduCoin.api("/api/submit", {
+          method: "POST",
+          body: { username, quizId, answers },
+        });
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit answers";
+
+        if (!res?.ok) {
+          const err = res?.error || "UNKNOWN";
+          if (err === "ALREADY_ATTEMPTED") {
+            EduCoin.showNotice(noticeEl, {
+              type: "bad",
+              title: "Already rewarded",
+              message: "You already claimed this quiz reward for this username.",
+            });
+          } else {
+            EduCoin.showNotice(noticeEl, {
+              type: "bad",
+              title: "Submission failed",
+              message: "Please try again.",
+            });
+          }
+          return;
+        }
+
+        await EduCoin.refreshTopbar();
+        EduCoin.showNotice(noticeEl, {
+          type: "good",
+          title: `Success — you earned ${res.earned} EDU`,
+          message: `Correct: ${res.correctCount}/${res.totalQuestions}. New balance: ${res.balance} EDU.`,
+        });
+      }
+
+      submitBtn.addEventListener("click", submit);
+      load();
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EduCoin — Wallet</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>EduCoin</h1>
+            <p>Your balance</p>
+          </div>
+        </div>
+        <div class="nav">
+          <a data-nav href="index.html">Login</a>
+          <a data-nav href="quizzes.html">Quizzes</a>
+          <a data-nav href="wallet.html" class="active">Wallet</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="row">
+            <h2 style="margin: 0">Wallet</h2>
+            <div class="spacer"></div>
+            <span class="pill">User: <code id="topbarUsername">—</code></span>
+            <span class="pill">Balance: <code><span id="topbarBalance">0</span> EDU</code></span>
+          </div>
+          <p style="margin-top: 10px">Your EduCoin balance is stored server-side.</p>
+
+          <div id="notice" class="notice" hidden></div>
+          <div id="details" class="notice" style="margin-top: 12px" hidden></div>
+
+          <div style="margin-top: 14px" class="row">
+            <button id="refreshBtn" class="btn secondary">Refresh</button>
+            <button id="toQuizzes" class="btn">Take a quiz</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>What’s next?</h2>
+          <p>
+            We can add a leaderboard, quiz categories, and daily streak rewards.
+            For secure accounts, we can add email/OTP login.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+      const username = EduCoin.requireUsernameOrRedirect();
+      const noticeEl = EduCoin.$("#notice");
+      const detailsEl = EduCoin.$("#details");
+
+      EduCoin.$("#toQuizzes").addEventListener("click", () => (location.href = "quizzes.html"));
+      EduCoin.$("#refreshBtn").addEventListener("click", load);
+
+      async function load() {
+        EduCoin.hideNotice(noticeEl);
+        detailsEl.hidden = true;
+        const res = await EduCoin.api(`/api/profile?username=${encodeURIComponent(username)}`);
+        if (!res?.ok) {
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "Couldn’t load wallet",
+            message: "Try refreshing.",
+          });
+          return;
+        }
+        detailsEl.hidden = false;
+        detailsEl.innerHTML = `
+          <strong>Account</strong>
+          <div style="margin-top:6px">Username: <code style="font-family:var(--mono)">${EduCoin.escapeHtml(
+            res.username
+          )}</code></div>
+          <div style="margin-top:6px">Balance: <code style="font-family:var(--mono)">${EduCoin.escapeHtml(
+            res.balance
+          )}</code> EDU</div>
+          <div style="margin-top:6px;color:var(--muted)">Created: ${EduCoin.escapeHtml(
+            new Date(res.created_at).toLocaleString()
+          )}</div>
+        `;
+        await EduCoin.refreshTopbar();
+      }
+
+      load();
+    </script>
+  </body>
+</html>
+

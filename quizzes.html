@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EduCoin — Quizzes</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>EduCoin</h1>
+            <p>Pick a quiz and earn coins</p>
+          </div>
+        </div>
+        <div class="nav">
+          <a data-nav href="index.html">Login</a>
+          <a data-nav href="quizzes.html" class="active">Quizzes</a>
+          <a data-nav href="wallet.html">Wallet</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="row">
+            <h2 style="margin: 0">Available quizzes</h2>
+            <div class="spacer"></div>
+            <span class="pill">User: <code id="topbarUsername">—</code></span>
+            <span class="pill">Balance: <code><span id="topbarBalance">0</span> EDU</code></span>
+          </div>
+          <p style="margin-top: 10px">Each quiz is rewarded once per username.</p>
+
+          <div id="notice" class="notice" hidden></div>
+          <div id="list" class="quizList"></div>
+        </div>
+
+        <div class="card">
+          <h2>Tips</h2>
+          <p>
+            Rewards are calculated on the server, so you can’t change the reward
+            in the browser. If you want a leaderboard, we can add it next.
+          </p>
+          <div class="notice" style="margin-top: 12px">
+            <strong>Note</strong>
+            <div style="margin-top: 6px">
+              Username-only accounts are easy to impersonate. For secure accounts,
+              we can add OTP/email later.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+      const username = EduCoin.requireUsernameOrRedirect();
+      const listEl = EduCoin.$("#list");
+      const noticeEl = EduCoin.$("#notice");
+
+      function renderItem(q) {
+        const el = document.createElement("div");
+        el.className = "quizItem";
+        el.innerHTML = `
+          <div class="badge">+${EduCoin.escapeHtml(q.reward)} EDU</div>
+          <div style="min-width:0">
+            <h3>${EduCoin.escapeHtml(q.title)}</h3>
+            <p>${EduCoin.escapeHtml(q.description || "")}</p>
+            <div style="margin-top:10px">
+              <button class="btn secondary" data-id="${EduCoin.escapeHtml(q.id)}">Start quiz</button>
+            </div>
+          </div>
+        `;
+        el.querySelector("button").addEventListener("click", () => {
+          location.href = `quiz.html?id=${encodeURIComponent(q.id)}`;
+        });
+        return el;
+      }
+
+      async function load() {
+        EduCoin.hideNotice(noticeEl);
+        listEl.innerHTML = "";
+        const res = await EduCoin.api("/api/quizzes");
+        if (!res?.ok) {
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "Couldn’t load quizzes",
+            message: "Try refreshing the page.",
+          });
+          return;
+        }
+        if (!res.quizzes?.length) {
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "No quizzes available",
+            message: "Add quizzes to quizzes/quizzes.json",
+          });
+          return;
+        }
+        res.quizzes.forEach((q) => listEl.appendChild(renderItem(q)));
+      }
+
+      load();
+    </script>
+  </body>
+</html>
+

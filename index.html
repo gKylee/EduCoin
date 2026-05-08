@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EduCoin — Earn by Learning</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>EduCoin</h1>
+            <p>Earn coins by answering quizzes</p>
+          </div>
+        </div>
+        <div class="nav">
+          <a data-nav href="index.html" class="active">Login</a>
+          <a data-nav href="quizzes.html">Quizzes</a>
+          <a data-nav href="wallet.html">Wallet</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Choose your username</h2>
+          <p>
+            Usernames are <strong>unique</strong> across the whole site. Use 3–18
+            characters: letters, numbers, underscore. Must start with a letter.
+          </p>
+
+          <div style="margin-top: 14px" class="row">
+            <input
+              id="username"
+              class="input"
+              placeholder="e.g. edu_learner"
+              autocomplete="off"
+              maxlength="18"
+            />
+            <button id="registerBtn" class="btn">Continue</button>
+          </div>
+
+          <div id="notice" class="notice" hidden></div>
+
+          <div class="footer">
+            This MVP uses username-only accounts. If you need secure ownership,
+            we can add email/OTP later.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>How you earn</h2>
+          <p>
+            Take a quiz, submit answers, and earn EduCoin for correct answers.
+            Each quiz can be rewarded once per username.
+          </p>
+          <div style="margin-top: 12px" class="row">
+            <span class="pill">Current user: <code id="topbarUsername">—</code></span>
+            <span class="pill">Balance: <code><span id="topbarBalance">0</span> EDU</code></span>
+          </div>
+          <div style="margin-top: 12px">
+            <button id="goQuizzes" class="btn secondary">Browse quizzes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+      const usernameEl = EduCoin.$("#username");
+      const noticeEl = EduCoin.$("#notice");
+      const btn = EduCoin.$("#registerBtn");
+
+      const goQuizzes = EduCoin.$("#goQuizzes");
+      goQuizzes.addEventListener("click", () => (location.href = "quizzes.html"));
+
+      const existing = EduCoin.getUsername();
+      if (existing) usernameEl.value = existing;
+
+      async function register() {
+        EduCoin.hideNotice(noticeEl);
+        const username = (usernameEl.value || "").trim();
+        if (!EduCoin.usernameIsValid(username)) {
+          EduCoin.showNotice(noticeEl, {
+            type: "bad",
+            title: "Invalid username",
+            message: "Use 3–18 chars: letters, numbers, underscore. Start with a letter.",
+          });
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Checking...";
+        const res = await EduCoin.api("/api/register", { method: "POST", body: { username } });
+        btn.disabled = false;
+        btn.textContent = "Continue";
+
+        if (!res?.ok) {
+          const error = res?.error || "UNKNOWN";
+          if (error === "USERNAME_TAKEN") {
+            EduCoin.showNotice(noticeEl, {
+              type: "bad",
+              title: "Username already taken",
+              message: "Please choose another username.",
+            });
+          } else if (error === "INVALID_USERNAME") {
+            EduCoin.showNotice(noticeEl, {
+              type: "bad",
+              title: "Invalid username",
+              message: "Please try a different username format.",
+            });
+          } else {
+            EduCoin.showNotice(noticeEl, {
+              type: "bad",
+              title: "Something went wrong",
+              message: "Please try again in a moment.",
+            });
+          }
+          return;
+        }
+
+        EduCoin.setUsername(res.username);
+        await EduCoin.refreshTopbar();
+        location.href = "quizzes.html";
+      }
+
+      btn.addEventListener("click", register);
+      usernameEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") register();
+      });
+    </script>
+  </body>
+</html>
+
