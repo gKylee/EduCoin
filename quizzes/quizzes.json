@@ -1,0 +1,73 @@
+{
+  "quizzes": [
+    {
+      "id": "crypto_basics",
+      "title": "Crypto Basics",
+      "description": "Quick basics: wallets, keys, and blocks.",
+      "reward": 25,
+      "perCorrect": 5,
+      "questions": [
+        {
+          "prompt": "What does a blockchain primarily store?",
+          "choices": ["A list of blocks containing transactions", "Only images", "Only passwords", "A single file"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "What is a private key used for?",
+          "choices": ["Signing transactions", "Printing coins", "Changing internet speed", "Mining without power"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "What is a wallet address?",
+          "choices": ["A public identifier to receive funds", "Your email password", "Your computer serial", "A secret key"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "What does 'decentralized' mean?",
+          "choices": ["No single authority controls the network", "One server controls everything", "Only banks participate", "Offline only"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "Which is safer to share publicly?",
+          "choices": ["Your wallet address", "Your private key", "Your seed phrase", "Your 2FA backup codes"],
+          "answerIndex": 0
+        }
+      ]
+    },
+    {
+      "id": "web_basics",
+      "title": "Web Basics",
+      "description": "HTML, CSS, and JavaScript fundamentals.",
+      "reward": 20,
+      "perCorrect": 4,
+      "questions": [
+        {
+          "prompt": "What does HTML stand for?",
+          "choices": ["HyperText Markup Language", "HighText Machine Language", "HyperTool Multi Language", "Home Tool Markup Language"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "Which tag is used for the largest heading?",
+          "choices": ["<h1>", "<h6>", "<head>", "<p>"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "CSS is mainly used for:",
+          "choices": ["Styling web pages", "Storing database records", "Sending emails", "Compiling Java code"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "Which keyword declares a constant in JavaScript?",
+          "choices": ["const", "var", "static", "fixed"],
+          "answerIndex": 0
+        },
+        {
+          "prompt": "Which is a valid CSS selector for a class named 'card'?",
+          "choices": [".card", "#card", "card()", "card->"],
+          "answerIndex": 0
+        }
+      ]
+    }
+  ]
+}
+
